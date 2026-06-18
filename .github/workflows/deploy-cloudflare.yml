@@ -83,10 +83,42 @@ jobs:
             exit 1
           fi
           
-          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "❌ CLOUDFLARE_ACCOUNT_ID variable cannot be empty."
-            exit 1
+          ACCOUNT_ID_REGEX='^[a-fA-F0-9]{32}$'
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || ! [[ "$CLOUDFLARE_ACCOUNT_ID" =~ $ACCOUNT_ID_REGEX ]]; then
+            if [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+              echo "::warning:: CLOUDFLARE_ACCOUNT_ID is not a valid account ID. Trying to resolve it automatically."
+            else
+              echo "ℹ️ CLOUDFLARE_ACCOUNT_ID is empty. Trying to resolve it automatically."
+            fi
+
+            set +e
+              WHOAMI_OUTPUT=$(pnpm wrangler whoami --json 2>&1)
+              WHOAMI_STATUS=$?
+            set -e
+            if [ $WHOAMI_STATUS -ne 0 ]; then
+              echo "$WHOAMI_OUTPUT"
+              echo "❌ Failed to resolve CLOUDFLARE_ACCOUNT_ID from wrangler whoami."
+              exit 1
+            fi
+
+            RESOLVED_ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | jq -r --arg input "$CLOUDFLARE_ACCOUNT_ID" '
+              (
+                [(.accounts // [])[] | select(.id == $input or .name == $input) | .id][0]
+                // .account.id
+                // .accounts[0].id
+                // empty
+              )
+            ')
+
+            if [ -z "$RESOLVED_ACCOUNT_ID" ] || ! [[ "$RESOLVED_ACCOUNT_ID" =~ $ACCOUNT_ID_REGEX ]]; then
+              echo "❌ Unable to determine a valid CLOUDFLARE_ACCOUNT_ID from wrangler whoami."
+              exit 1
+            fi
+
+            CLOUDFLARE_ACCOUNT_ID="$RESOLVED_ACCOUNT_ID"
+            echo "✅ Resolved CLOUDFLARE_ACCOUNT_ID automatically."
           fi
+          echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID" >> "$GITHUB_ENV"
           
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "❌ CLOUDFLARE_API_TOKEN variable cannot be empty."
