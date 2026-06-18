@@ -298,7 +298,8 @@ jobs:
           echo "🛠️ Starting database initialization..."
           sleep 15
           
-          WORKER_URL="${CUSTOM_DOMAIN:+https://$CUSTOM_DOMAIN}"
+          CUSTOM_DOMAIN_CLEAN="$(printf '%s' "$CUSTOM_DOMAIN" | tr -d '\r\n')"
+          WORKER_URL="${CUSTOM_DOMAIN_CLEAN:+https://$CUSTOM_DOMAIN_CLEAN}"
           WORKER_URL="${WORKER_URL:-${{ steps.deploy.outputs.worker_url }}}"
           
           if [ -z "$WORKER_URL" ]; then
@@ -306,7 +307,8 @@ jobs:
             exit 1
           fi
           
-          HTTP_CODE=$(curl -sL -w "%{http_code}" -o response.txt "$WORKER_URL/api/init/${JWT_SECRET}")
+          JWT_SECRET_ENCODED=$(printf '%s' "$JWT_SECRET" | jq -sRr @uri)
+          HTTP_CODE=$(curl -sL -w "%{http_code}" -o response.txt "$WORKER_URL/api/init/${JWT_SECRET_ENCODED}")
           RESPONSE_BODY=$(cat response.txt)
 
           if [ "$RESPONSE_BODY" = "success" ]; then
