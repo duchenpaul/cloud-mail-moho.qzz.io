@@ -103,7 +103,7 @@ jobs:
 
             RESOLVED_ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | jq -r --arg input "$CLOUDFLARE_ACCOUNT_ID" '
               (
-                [(.accounts // [])[] | select(.id == $input or .name == $input) | .id][0]
+                [(.accounts // [])[] | select(($input != "") and (.id == $input or .name == $input)) | .id][0]
                 // .account.id
                 // .accounts[0].id
                 // empty
