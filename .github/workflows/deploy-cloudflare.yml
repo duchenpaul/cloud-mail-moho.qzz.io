@@ -101,14 +101,21 @@ jobs:
               exit 1
             fi
 
-            RESOLVED_ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | jq -r --arg input "$CLOUDFLARE_ACCOUNT_ID" '
-              (
-                [(.accounts // [])[] | select(($input != "") and (.id == $input or .name == $input)) | .id][0]
-                // .account.id
-                // .accounts[0].id
-                // empty
-              )
-            ')
+            set +e
+              RESOLVED_ACCOUNT_ID=$(echo "$WHOAMI_OUTPUT" | jq -r --arg input "$CLOUDFLARE_ACCOUNT_ID" '
+                (
+                  [(.accounts // [])[] | select(($input != "") and (.id == $input or .name == $input)) | .id][0]
+                  // .account.id
+                  // .accounts[0].id
+                  // empty
+                )
+              ')
+              JQ_STATUS=$?
+            set -e
+            if [ $JQ_STATUS -ne 0 ]; then
+              echo "❌ Failed to parse wrangler whoami output while resolving CLOUDFLARE_ACCOUNT_ID."
+              exit 1
+            fi
 
             if [ -z "$RESOLVED_ACCOUNT_ID" ] || ! [[ "$RESOLVED_ACCOUNT_ID" =~ $ACCOUNT_ID_REGEX ]]; then
               echo "❌ Unable to determine a valid CLOUDFLARE_ACCOUNT_ID from wrangler whoami."
