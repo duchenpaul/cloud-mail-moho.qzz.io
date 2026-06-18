@@ -123,6 +123,8 @@ jobs:
           EOF
           fi
 
+          DOMAIN="$(printf '%s' "$DOMAIN" | tr -d '\r\n')"
+
           sed -i "s|\${NAME}|${NAME}|g" "$CONFIG_FILE"
           sed -i "s|\${CUSTOM_DOMAIN}|${CUSTOM_DOMAIN}|g" "$CONFIG_FILE"
           sed -i "s|\"\${DOMAIN}\"|${DOMAIN}|g" "$CONFIG_FILE"
