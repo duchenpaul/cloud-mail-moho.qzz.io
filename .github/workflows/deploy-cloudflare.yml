@@ -123,7 +123,19 @@ jobs:
           EOF
           fi
 
+          NAME="$(printf '%s' "$NAME" | tr -d '\r\n')"
+          CUSTOM_DOMAIN="$(printf '%s' "$CUSTOM_DOMAIN" | tr -d '\r\n')"
           DOMAIN="$(printf '%s' "$DOMAIN" | tr -d '\r\n')"
+          ADMIN="$(printf '%s' "$ADMIN" | tr -d '\r\n')"
+          JWT_SECRET="$(printf '%s' "$JWT_SECRET" | tr -d '\r\n')"
+          R2_BUCKET_NAME="$(printf '%s' "$R2_BUCKET_NAME" | tr -d '\r\n')"
+          PROJECT_LINK="$(printf '%s' "$PROJECT_LINK" | tr -d '\r\n')"
+          ANALYSIS_CACHE="$(printf '%s' "$ANALYSIS_CACHE" | tr -d '\r\n')"
+          AI_MODEL="$(printf '%s' "$AI_MODEL" | tr -d '\r\n')"
+          LINUXDO_CLIENT_ID="$(printf '%s' "$LINUXDO_CLIENT_ID" | tr -d '\r\n')"
+          LINUXDO_CLIENT_SECRET="$(printf '%s' "$LINUXDO_CLIENT_SECRET" | tr -d '\r\n')"
+          LINUXDO_CALLBACK_URL="$(printf '%s' "$LINUXDO_CALLBACK_URL" | tr -d '\r\n')"
+          LINUXDO_SWITCH="$(printf '%s' "$LINUXDO_SWITCH" | tr -d '\r\n')"
 
           sed -i "s|\${NAME}|${NAME}|g" "$CONFIG_FILE"
           sed -i "s|\${CUSTOM_DOMAIN}|${CUSTOM_DOMAIN}|g" "$CONFIG_FILE"
